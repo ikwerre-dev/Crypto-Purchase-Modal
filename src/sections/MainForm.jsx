@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Camera } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { toast } from 'react-toastify';
 
 const cryptos = [
   { symbol: 'BTC', name: 'Bitcoin', color: 'bg-orange-500' },
@@ -10,33 +11,60 @@ const cryptos = [
   { symbol: 'XRP', name: 'Ripple', color: 'bg-black' },
 ];
 
-export default function MainForm() {
+
+function App() {
   const [walletAddress, setWalletAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentMethodModalOpen, setIsPaymentMethodModalOpen] = useState(false);
   const [isKeypadModalOpen, setisKeypadModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState(cryptos[0]);
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [IntiatePaymentModal, setIntiatePaymentModal] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+
+  const openPaymentMethodModal = () => setIsPaymentMethodModalOpen(true);
+  const closePaymentMethodModal = () => setIsPaymentMethodModalOpen(false);
+
+  const openIntiatePaymentModal = () => setIntiatePaymentModal(true);
+  const closeIntiatePaymentModal = () => setIntiatePaymentModal(false);
+
 
   const openScanner = () => setIsScannerOpen(true);
   const closeScanner = () => setIsScannerOpen(false);
   const handleScan = (data) => {
     if (data) {
-      setWalletAddress(data);
+      console.log(data[0].rawValue); // Corrected the access to data[0]
+      setWalletAddress(data[0].rawValue); // Ensure this is how your data is structured
       closeScanner();
     }
+
   };
 
-      // Handle scan errors
-      const handleError = (err) => {
-        console.error(err);
-        alert('Error: ' + err);
-    };
+  // Handle scan errors
+  const handleError = (err) => {
+    console.error(err);
+    alert('Error: ' + err);
+  };
+
+  const getquote = () => {
+    if (amount < 10) {
+      toast("Atleast a minimum of $10 is needed!");
+      return;
+    }
+    if (walletAddress.length < 5) {
+      toast("Invalid Beneficiary Wallet address!");
+      return;
+
+    }
+    openPaymentMethodModal();
+
+  }
 
 
   const openKeypadModal = () => setisKeypadModalOpen(true);
@@ -62,11 +90,76 @@ export default function MainForm() {
     }
   };
   const CompleteKeypad = (amount) => {
+    // alert(amount)
+    amount < 1 ? amount = 0 : amount;
     const formattedAmount = parseFloat(amount).toFixed(2);
     setAmount(formattedAmount);
     closeKeypadModal();
   };
+  const [selectedMethod, setSelectedMethod] = useState('Credit Card');
 
+  const paymentMethods = [
+    { name: "Credit Card", providers: ['simplex'] },
+    { name: "Debit Card", providers: ['simplex', 'wyre'] },
+    { name: "Bank Transfer", providers: ['sardine'] },
+  ];
+
+  const PaymentMethod = ({ name, providers, isSelected, onClick }) => (
+    <div
+      className="flex border border-sm rounded-2xl border-blue-200  items-center py-5 px-6 cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="mr-3 ">
+        <input
+          type="radio"
+          className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+          checked={isSelected}
+          readOnly
+        />
+      </div>
+      <div className="flex-grow">
+        <p className={`text-sm ${isSelected ? 'text-blue-600' : 'text-gray-700'}`}>{name}</p>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Provided by {providers.map((provider, index) => (
+            <span key={index} className="inline-flex items-center">
+              {index > 0 && " "}
+              {provider === 'simplex' && <span className="text-green-500 mr-1">◈</span>}
+              {provider === 'wyre' && <span className="text-blue-500 mr-1">⚡</span>}
+              {provider === 'sardine' && <span className="mr-1">◇</span>}
+              {provider}
+            </span>
+          ))}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderInputFields = () => {
+    switch (selectedMethod) {
+      case 'Credit Card':
+      case 'Debit Card':
+        return (
+          <>
+            <input className="w-full p-2 border rounded" placeholder="Card Number" />
+            <div className="flex space-x-2">
+              <input className="w-1/2 p-2 border rounded" placeholder="MM/YY" />
+              <input className="w-1/2 p-2 border rounded" placeholder="CVV" />
+            </div>
+            <input className="w-full p-2 border rounded" placeholder="Cardholder Name" />
+          </>
+        );
+      case 'Bank Transfer':
+        return (
+          <>
+            <input className="w-full p-2 border rounded" placeholder="Account Number" />
+            <input className="w-full p-2 border rounded" placeholder="Routing Number" />
+            <input className="w-full p-2 border rounded" placeholder="Account Holder Name" />
+          </>
+        );
+      default:
+        return null;
+    }
+  };
   return (
     <div className="max-w-md mx-auto p-4 font-sans h-100 grid relative overflow-hidden">
       <div className="relative p-2 h-[40rem]">
@@ -121,15 +214,26 @@ export default function MainForm() {
             <Camera size={24} />
           </button>
         </div>
+        {isScannerOpen && (
+          <div className="absolute inset-0 z-50 bg-white p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Scan QR Code</h3>
+              <button onClick={closeScanner} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <Scanner
+              onScan={handleScan}
+              onError={handleError}
+              allowMultiple={true}
+              scanDelay={3000}
+            />
+          </div>
+        )}
 
-        <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
+        <button onClick={getquote} className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
           GET QUOTE
         </button>
-
-        <div className="mt-4 flex items-center text-gray-600">
-          <input type="checkbox" checked className="mr-2" readOnly />
-          <span>Automatically select best provider</span>
-        </div>
 
         {/* Crypto Modal */}
         <div className={`absolute inset-0 bg-white transform transition-transform z-50 duration-300 ease-in-out ${isModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -154,6 +258,57 @@ export default function MainForm() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+
+        {/* Payment Method Modal */}
+        <div className={`absolute inset-0 bg-white transform transition-transform z-50 duration-300 ease-in-out ${isPaymentMethodModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 h-full overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Select Payment Method</h3>
+              <button onClick={closeIntiatePaymentModal} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-2 mt-[2rem]">
+              {paymentMethods.map((method) => (
+                <PaymentMethod
+                  key={method.name}
+                  name={method.name}
+                  providers={method.providers}
+                  isSelected={selectedMethod === method.name}
+                  onClick={() => setSelectedMethod(method.name)}
+                />
+              ))}
+
+            </div>
+            <button
+              className="w-full bg-blue-600 text-white py-3 mt-3 rounded-lg font-semibold"
+              onClick={() => openIntiatePaymentModal()}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+
+        {/* Bank Detaills Modal */}
+        <div className={`absolute inset-0 bg-white transform transition-transform z-50 duration-300 ease-in-out ${IntiatePaymentModal ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 h-full overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Enter {selectedMethod} details</h3>
+              <button onClick={closeIntiatePaymentModal} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-2 mt-[2rem]">
+              {renderInputFields()}
+            </div>
+            <button
+              className="w-full bg-blue-600 text-white py-3 mt-3 rounded-lg font-semibold"
+              onClick={() => openIntiatePaymentModal()}
+            >
+              Continue
+            </button>
           </div>
         </div>
 
@@ -215,23 +370,9 @@ export default function MainForm() {
             </div>
           </div>
         </div>
-        {isScannerOpen && (
-          <div className="absolute inset-0 z-50 bg-white p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Scan QR Code</h3>
-              <button onClick={closeScanner} className="text-gray-500 hover:text-gray-700">
-                <X size={24} />
-              </button>
-            </div>
-            <Scanner
-              onScan={handleScan}
-              onError={handleError}
-              allowMultiple={true}
-              scanDelay={3000}
-            />
-          </div>
-        )}
+
       </div>
     </div>
   );
 }
+export default App;

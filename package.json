@@ -4,20 +4,22 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@yudiel/react-qr-scanner": "^2.0.8",
     "lucide-react": "^0.446.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-native-camera": "^4.2.1",
     "react-native-qrcode-scanner": "^1.5.5",
     "react-notifications-component": "^4.0.1",
-    "react-qr-reader": "^3.0.0-beta-1",
-    "react-router-dom": "^6.26.2"
+    "react-qr-scanner": "^1.0.0-alpha.11",
+    "react-router-dom": "^6.26.2",
+    "react-toastify": "^10.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
