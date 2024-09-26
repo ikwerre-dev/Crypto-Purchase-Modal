@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Camera } from 'lucide-react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 const cryptos = [
   { symbol: 'BTC', name: 'Bitcoin', color: 'bg-orange-500' },
@@ -10,15 +11,33 @@ const cryptos = [
 ];
 
 export default function MainForm() {
+  const [walletAddress, setWalletAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isKeypadModalOpen, setisKeypadModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState(cryptos[0]);
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');  
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+  const openScanner = () => setIsScannerOpen(true);
+  const closeScanner = () => setIsScannerOpen(false);
+  const handleScan = (data) => {
+    if (data) {
+      setWalletAddress(data);
+      closeScanner();
+    }
+  };
+
+      // Handle scan errors
+      const handleError = (err) => {
+        console.error(err);
+        alert('Error: ' + err);
+    };
+
 
   const openKeypadModal = () => setisKeypadModalOpen(true);
   const closeKeypadModal = () => setisKeypadModalOpen(false);
@@ -42,11 +61,11 @@ export default function MainForm() {
       setAmount(prev => prev + key);
     }
   };
-
   const CompleteKeypad = (amount) => {
-    setAmount(amount);
+    const formattedAmount = parseFloat(amount).toFixed(2);
+    setAmount(formattedAmount);
     closeKeypadModal();
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 font-sans h-100 grid relative overflow-hidden">
@@ -71,7 +90,7 @@ export default function MainForm() {
         <div className="bg-gray-100 rounded-lg p-4 mb-4 flex items-center justify-between">
           <input
             type="text"
-            value={amount || '0'}
+            value={'$' + (amount || '0.00')}
             onClick={openKeypadModal}
             readOnly={true}
             onChange={(e) => setAmount(e.target.value)}
@@ -86,6 +105,21 @@ export default function MainForm() {
               <ChevronRight className="text-gray-400" />
             </button>
           </div>
+        </div>
+
+        <h2 className="text-l font-semibold mb-2">Wallet Address{' '} <span className="text-blue-500">*</span></h2>
+
+        <div className="bg-gray-100 rounded-lg p-4 mb-4 flex items-center justify-between">
+          <input
+            type="text"
+            value={walletAddress}
+            onChange={(e) => setWalletAddress(e.target.value)}
+            className="bg-transparent text-l font-semibold w-full outline-none"
+            placeholder="Enter wallet address"
+          />
+          <button onClick={openScanner} className="ml-2 text-gray-500">
+            <Camera size={24} />
+          </button>
         </div>
 
         <button className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold">
@@ -131,7 +165,7 @@ export default function MainForm() {
               <h2 className="text-xl font-semibold">Enter Amount</h2>
             </div>
             <div className="text-center mb-6">
-              <div className="text-4xl font-bold mb-1">${amount || '0'}</div>
+              <div className="text-4xl font-bold mb-1">${amount || '0.00'}</div>
               <div className="text-gray-500">Amount</div>
             </div>
             <div className="flex justify-end mb-6">
@@ -159,7 +193,7 @@ export default function MainForm() {
           </div>
         </div>
 
-         <div className={`absolute inset-0 bg-white transform transition-transform duration-300 z-40 h-[100%] ease-in-out ${isCurrencyModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className={`absolute inset-0 bg-white transform transition-transform duration-300 z-40 h-[100%] ease-in-out ${isCurrencyModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-4 h-full overflow-y-auto">
             <div className="flex items-center mb-6">
               <ChevronLeft className="mr-2 cursor-pointer" onClick={closeCurrencyModal} />
@@ -181,7 +215,22 @@ export default function MainForm() {
             </div>
           </div>
         </div>
-
+        {isScannerOpen && (
+          <div className="absolute inset-0 z-50 bg-white p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Scan QR Code</h3>
+              <button onClick={closeScanner} className="text-gray-500 hover:text-gray-700">
+                <X size={24} />
+              </button>
+            </div>
+            <Scanner
+              onScan={handleScan}
+              onError={handleError}
+              allowMultiple={true}
+              scanDelay={3000}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
