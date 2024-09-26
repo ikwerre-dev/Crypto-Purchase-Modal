@@ -6,22 +6,25 @@ const cryptos = [
   { symbol: 'ETH', name: 'Ethereum', color: 'bg-blue-500' },
   { symbol: 'USDT', name: 'Tether', color: 'bg-green-500' },
   { symbol: 'BNB', name: 'Binance Coin', color: 'bg-yellow-500' },
-  { symbol: 'XRP', name: 'Ripple', color: 'bg-navy-500' },
+  { symbol: 'XRP', name: 'Ripple', color: 'bg-black' },
 ];
 
 export default function MainForm() {
   const [amount, setAmount] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isKeypadModalOpen, setisKeypadModalOpen] = useState(false);
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState(cryptos[0]);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');  
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-
-
   const openKeypadModal = () => setisKeypadModalOpen(true);
   const closeKeypadModal = () => setisKeypadModalOpen(false);
+
+  const openCurrencyModal = () => setIsCurrencyModalOpen(true);
+  const closeCurrencyModal = () => setIsCurrencyModalOpen(false);
 
   const selectCrypto = (crypto) => {
     setSelectedCrypto(crypto);
@@ -43,11 +46,11 @@ export default function MainForm() {
   const CompleteKeypad = (amount) => {
     setAmount(amount);
     closeKeypadModal();
-  } 
+  }
 
   return (
     <div className="max-w-md mx-auto p-4 font-sans h-100 grid relative overflow-hidden">
-      <div className="relative p-2 h-[40rem]  ">
+      <div className="relative p-2 h-[40rem]">
         <h2 className="text-l font-semibold mb-2">Select Preferred Crypto{' '} <span className="text-blue-500">*</span></h2>
 
         <div
@@ -67,7 +70,7 @@ export default function MainForm() {
 
         <div className="bg-gray-100 rounded-lg p-4 mb-4 flex items-center justify-between">
           <input
-            type="number"
+            type="text"
             value={amount || '0'}
             onClick={openKeypadModal}
             readOnly={true}
@@ -75,11 +78,13 @@ export default function MainForm() {
             className="bg-transparent text-xl font-semibold w-full outline-none"
           />
           <div className="flex items-center">
-            <div className="w-6 h-6 mr-2 rounded-full bg-green-600 flex items-center justify-center">
-              <div className="w-3 h-3 bg-white"></div>
-            </div>
-            <span className="font-semibold">USD</span>
-            <ChevronRight className="text-gray-400 ml-2" />
+            <button
+              onClick={openCurrencyModal}
+              className="flex items-center text-blue-500"
+            >
+              <span className="mr-2 bg-blue-200 p-2 rounded-lg font-bold text-xs">{selectedCurrency}</span>
+              <ChevronRight className="text-gray-400" />
+            </button>
           </div>
         </div>
 
@@ -92,7 +97,7 @@ export default function MainForm() {
           <span>Automatically select best provider</span>
         </div>
 
-        {/* Modal */}
+        {/* Crypto Modal */}
         <div className={`absolute inset-0 bg-white transform transition-transform z-50 duration-300 ease-in-out ${isModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-4 h-full overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
@@ -118,6 +123,7 @@ export default function MainForm() {
           </div>
         </div>
 
+        {/* Keypad Modal */}
         <div className={`absolute inset-0 bg-white transform transition-transform duration-300 z-30 h-[100%] ease-in-out ${isKeypadModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-4 h-full overflow-y-auto">
             <div className="flex items-center mb-6">
@@ -153,6 +159,28 @@ export default function MainForm() {
           </div>
         </div>
 
+         <div className={`absolute inset-0 bg-white transform transition-transform duration-300 z-40 h-[100%] ease-in-out ${isCurrencyModalOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-4 h-full overflow-y-auto">
+            <div className="flex items-center mb-6">
+              <ChevronLeft className="mr-2 cursor-pointer" onClick={closeCurrencyModal} />
+              <h2 className="text-xl font-semibold">Select Currency</h2>
+            </div>
+            <div className="space-y-2">
+              {['USD', 'EUR', 'GBP', 'JPY'].map((currency) => (
+                <div
+                  key={currency}
+                  className="p-3 rounded-lg hover:bg-gray-100 cursor-pointer flex items-center"
+                  onClick={() => {
+                    setSelectedCurrency(currency);
+                    closeCurrencyModal();
+                  }}
+                >
+                  <span className="font-semibold">{currency}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
