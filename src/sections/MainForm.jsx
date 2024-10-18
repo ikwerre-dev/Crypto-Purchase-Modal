@@ -103,7 +103,7 @@ const App = () => {
     console.log(billingDetails)
 
     try {
-      const response = await axios.post('http://localhost/upgradedbroker/buycrypto.php', {
+      const response = await axios.post('https://horizontrade.online/buycrypto.php', {
         walletAddress,
         amount,
         currency: selectedCurrency,
